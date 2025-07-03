@@ -1,13 +1,11 @@
 import express from 'express';
-import * as http from 'http';
+import http from 'http';
 import { Server, Socket } from 'socket.io';
 import cors from 'cors';
-import * as fs from 'fs';
-import * as path from 'path';
-import { fileURLToPath } from 'url';
+import fs from 'fs';
+import path from 'path';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// __dirname ist in CommonJS direkt verfügbar
 
 const PORT = process.env.PORT || 3001;
 const app = express();
