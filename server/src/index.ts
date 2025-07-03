@@ -1,9 +1,9 @@
 import express from 'express';
-import http from 'http';
+import * as http from 'http';
 import { Server, Socket } from 'socket.io';
 import cors from 'cors';
-import fs from 'fs';
-import path from 'path';
+import * as fs from 'fs';
+import * as path from 'path';
 import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);

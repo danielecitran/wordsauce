@@ -3,10 +3,18 @@
   "compilerOptions": {
     "outDir": "dist",
     "module": "esnext",
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "target": "es2020",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true
   },
   "ts-node": {
     "esm": true
   },
-  "include": ["src", "scripts", "tests"]
+  "include": ["src/**/*", "scripts/**/*"],
+  "exclude": ["node_modules", "dist"]
 }
