@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "module": "esnext",
+    "moduleResolution": "node"
+  },
+  "ts-node": {
+    "esm": true
+  },
+  "include": ["src", "scripts", "tests"]
+}
