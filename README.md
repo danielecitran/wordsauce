@@ -1,6 +1,10 @@
-# WordSauce - Das Wörter erraten Spiel
+# wordsauce - Wörtererraten-Spiel
 
-## Installation
+## Link
+
+[Jetzt spielen](http://wordsauce.onrender.com/)
+
+## Lokale Installation
 
 ```bash
 # Dependencies installieren
