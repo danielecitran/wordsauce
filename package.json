@@ -7,6 +7,7 @@
     "server"
   ],
   "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:client": "npm --workspace client run dev",
     "dev:server": "npm --workspace server run dev",
     "build": "npm --workspace client run build && npm --workspace server run build",
@@ -14,6 +15,7 @@
     "deploy": "railway up --detach"
   },
   "devDependencies": {
+    "concurrently": "^8.2.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   }
