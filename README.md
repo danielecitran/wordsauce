@@ -24,8 +24,8 @@ npm run dev
 
 Dies startet:
 
-- 🔵 Server auf http://localhost:3001
-- 🟢 Client auf http://localhost:5173
+- Server auf http://localhost:3001
+- Client auf http://localhost:5173
 
 ### Option 2: Einzeln starten
 
