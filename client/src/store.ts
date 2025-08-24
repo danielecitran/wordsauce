@@ -8,6 +8,13 @@ interface Player {
   hasGuessed?: boolean;
 }
 
+interface NotificationData {
+  id: string;
+  type: 'join' | 'leave';
+  playerName: string;
+  playerId: string;
+}
+
 interface RoundSummary {
   word: string;
   scores: Player[];
@@ -41,6 +48,7 @@ interface GameState {
   gameFinished: boolean;
   finalResults: FinalResults | null;
   showingFinalResults: boolean;
+  notifications: NotificationData[];
   setRoomId: (roomId: string) => void;
   setPlayers: (players: Player[]) => void;
   setWord: (word: string) => void;
@@ -62,6 +70,8 @@ interface GameState {
   setGameFinished: (finished: boolean) => void;
   setFinalResults: (results: FinalResults | null) => void;
   setShowingFinalResults: (showing: boolean) => void;
+  addNotification: (notification: Omit<NotificationData, 'id'>) => void;
+  removeNotification: (id: string) => void;
 }
 
 export const useGameStore = create<GameState>((set) => ({
@@ -86,6 +96,7 @@ export const useGameStore = create<GameState>((set) => ({
   gameFinished: false,
   finalResults: null,
   showingFinalResults: false,
+  notifications: [],
   setRoomId: (roomId) => set({ roomId }),
   setPlayers: (players) => set({ players }),
   setWord: (word) => set({ word }),
@@ -107,4 +118,10 @@ export const useGameStore = create<GameState>((set) => ({
   setGameFinished: (gameFinished) => set({ gameFinished }),
   setFinalResults: (finalResults) => set({ finalResults }),
   setShowingFinalResults: (showingFinalResults) => set({ showingFinalResults }),
+  addNotification: (notification) => set((state) => ({
+    notifications: [...state.notifications, { ...notification, id: Date.now().toString() + Math.random().toString(36).substr(2, 9) }]
+  })),
+  removeNotification: (id) => set((state) => ({
+    notifications: state.notifications.filter(n => n.id !== id)
+  })),
 })); 

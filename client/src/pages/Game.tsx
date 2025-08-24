@@ -4,6 +4,7 @@ import { useGameStore } from '../store';
 import Timer from '../components/Timer';
 import Chat from '../components/Chat';
 import Scoreboard from '../components/Scoreboard';
+import NotificationManager from '../components/NotificationManager';
 import { socket } from '../socket';
 import logo from '../assets/images/wordsauce.png';
 
@@ -30,6 +31,7 @@ const Game: React.FC = () => {
   const gameFinished = useGameStore((s) => s.gameFinished);
   const finalResults = useGameStore((s) => s.finalResults);
   const showingFinalResults = useGameStore((s) => s.showingFinalResults);
+  const notifications = useGameStore((s) => s.notifications);
   
   const setWord = useGameStore((s) => s.setWord);
   const setHints = useGameStore((s) => s.setHints);
@@ -49,6 +51,8 @@ const Game: React.FC = () => {
   const setGameFinished = useGameStore((s) => s.setGameFinished);
   const setFinalResults = useGameStore((s) => s.setFinalResults);
   const setShowingFinalResults = useGameStore((s) => s.setShowingFinalResults);
+  const addNotification = useGameStore((s) => s.addNotification);
+  const removeNotification = useGameStore((s) => s.removeNotification);
 
   useEffect(() => {
     socket.on('game-start', ({ word, hints, currentRound, maxRounds }) => {
@@ -134,6 +138,25 @@ const Game: React.FC = () => {
       setHostId(hostId);
       setIsHost(hostId === socket.id);
     });
+
+    // Spieler-Events für Benachrichtigungen
+    socket.on('player-joined', ({ playerName, playerId }) => {
+      console.log('Spieler beigetreten:', { playerName, playerId });
+      addNotification({
+        type: 'join',
+        playerName: playerName || 'Unbekannter Spieler',
+        playerId: playerId || 'unknown',
+      });
+    });
+
+    socket.on('player-left', ({ playerName, playerId }) => {
+      console.log('Spieler verlassen:', { playerName, playerId });
+      addNotification({
+        type: 'leave',
+        playerName: playerName || 'Unbekannter Spieler',
+        playerId: playerId || 'unknown',
+      });
+    });
     
     return () => {
       socket.off('game-start');
@@ -145,9 +168,11 @@ const Game: React.FC = () => {
       socket.off('round-summary');
       socket.off('game-finished');
       socket.off('host-info');
+      socket.off('player-joined');
+      socket.off('player-left');
       if (countdownInterval.current) clearInterval(countdownInterval.current);
     };
-      }, [setWord, setHints, setCurrentHintIndex, setTimer, setGameOver, setGameStarted, setPlayers, setHasGuessedWord, setRoundSummary, setShowingSummary, setSummaryCountdown, setHostId, setIsHost, setCurrentRound, setMaxRounds, setGameFinished, setFinalResults, setShowingFinalResults]);
+      }, [setWord, setHints, setCurrentHintIndex, setTimer, setGameOver, setGameStarted, setPlayers, setHasGuessedWord, setRoundSummary, setShowingSummary, setSummaryCountdown, setHostId, setIsHost, setCurrentRound, setMaxRounds, setGameFinished, setFinalResults, setShowingFinalResults, addNotification]);
 
   const handleStartGame = () => {
     socket.emit('start-game');
@@ -171,8 +196,8 @@ const Game: React.FC = () => {
     const otherPlayers = finalResults?.finalScores.slice(1) || [];
 
     return (
-      <div className="w-full max-w-4xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+      <div className="w-full">
+        <div className="bg-white rounded-2xl shadow-lg p-8 text-center max-w-4xl mx-auto">
           <div className="text-6xl mb-4">🏆</div>
           <h1 className="text-4xl font-bold mb-6 text-gray-800">Spiel beendet!</h1>
           
@@ -243,8 +268,8 @@ const Game: React.FC = () => {
 
   // Round Summary Component
   const RoundSummaryView = () => (
-    <div className="w-full max-w-3xl mx-auto">
-      <div className="bg-white rounded-2xl shadow-lg p-6 text-center">
+    <div className="w-full">
+      <div className="bg-white rounded-2xl shadow-lg p-6 text-center max-w-3xl mx-auto">
         <div className="text-4xl mb-3">🎉</div>
         <h2 className="text-3xl font-bold mb-4 text-gray-800">
           Runde {roundSummary?.currentRound || 1} von {roundSummary?.maxRounds || 3} beendet!
@@ -298,14 +323,14 @@ const Game: React.FC = () => {
   );
 
       return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100">
-        <div className="w-full mx-auto p-2 lg:p-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 w-full game-container">
+        <div className="max-w-7xl mx-auto p-2 lg:p-4 w-full">
         {showingFinalResults ? (
           <FinalResultsView />
         ) : showingSummary ? (
           <RoundSummaryView />
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 w-full">
             
             {/* Main Game Area - Takes 3 columns on lg screens */}
             <div className="lg:col-span-3 space-y-3">
@@ -445,28 +470,28 @@ const Game: React.FC = () => {
             </div>
             
             {/* Sidebar - Live Feed and Leaderboard */}
-            <div className="lg:col-span-1 space-y-3">
+            <div className="lg:col-span-1 space-y-3 w-full">
               
               {/* Live Feed */}
-              <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-                <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3">
+              <div className="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col" style={{ height: '320px' }}>
+                <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3 flex-shrink-0">
                   <h3 className="text-lg font-bold flex items-center gap-2">
                     📡 Live Feed
                   </h3>
                 </div>
-                <div className="p-2">
+                <div className="flex-1 p-2 overflow-hidden">
                   <Chat />
                 </div>
               </div>
               
               {/* Leaderboard */}
-              <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-                <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-3">
+              <div className="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col" style={{ height: '320px' }}>
+                <div className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white p-3 flex-shrink-0">
                   <h3 className="text-lg font-bold flex items-center gap-2">
                     🏆 Leaderboard
                   </h3>
                 </div>
-                <div className="p-2">
+                <div className="flex-1 p-2 overflow-hidden">
                   <Scoreboard />
                 </div>
               </div>
@@ -474,6 +499,12 @@ const Game: React.FC = () => {
             </div>
           </div>
         )}
+        
+        {/* Notification Manager */}
+        <NotificationManager 
+          notifications={notifications}
+          onRemoveNotification={removeNotification}
+        />
       </div>
     </div>
   );

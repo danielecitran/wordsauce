@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { socket } from '../socket';
 import { useGameStore } from '../store';
@@ -12,16 +12,50 @@ interface ModalProps {
 }
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title }) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, onClose]);
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in">
-      <div className="bg-white rounded-2xl shadow-xl border border-neutral-100 p-8 w-full max-w-md animate-slide-in-from-bottom">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in"
+      onClick={handleBackdropClick}
+    >
+      <div 
+        ref={modalRef}
+        className="bg-white rounded-2xl shadow-xl border border-neutral-100 p-8 w-full max-w-md animate-slide-in-from-bottom"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">{title}</h2>
           <button
             onClick={onClose}
-            className="text-neutral-400 hover:text-neutral-600 text-2xl leading-none transition-colors"
+            className="text-neutral-400 hover:text-neutral-600 text-2xl leading-none transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-300 rounded-full p-1"
+            aria-label="Modal schließen"
           >
             ×
           </button>
@@ -209,6 +243,11 @@ const Lobby: React.FC = () => {
             maxLength={6}
             value={room}
             onChange={(e) => setRoom(e.target.value.toUpperCase())}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && room && name.trim()) {
+                handleJoin();
+              }
+            }}
             autoFocus
           />
           
@@ -218,6 +257,11 @@ const Lobby: React.FC = () => {
             maxLength={16}
             value={name}
             onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && room && name.trim()) {
+                handleJoin();
+              }
+            }}
           />
           
           {error && (
@@ -227,8 +271,9 @@ const Lobby: React.FC = () => {
           )}
           
           <button
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-lg hover:shadow-sm transition-all duration-200"
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 rounded-lg hover:shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
             onClick={handleJoin}
+            disabled={!room || !name.trim()}
           >
             Raum beitreten
           </button>
@@ -252,6 +297,11 @@ const Lobby: React.FC = () => {
             maxLength={16}
             value={name}
             onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && name.trim()) {
+                handleCreate();
+              }
+            }}
             autoFocus
           />
           
@@ -262,9 +312,9 @@ const Lobby: React.FC = () => {
           )}
           
           <button
-            className="w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 rounded-lg hover:shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 rounded-lg hover:shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-purple-300"
             onClick={handleCreate}
-            disabled={isCreating}
+            disabled={isCreating || !name.trim()}
           >
             {isCreating ? (
               <div className="flex items-center justify-center gap-2">

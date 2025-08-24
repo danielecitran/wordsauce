@@ -28,8 +28,8 @@ const Chat: React.FC = () => {
   }, [chat]);
 
   return (
-    <div className="flex flex-col h-64">
-      <div className="flex-1 overflow-y-auto pr-2 space-y-1">
+    <div className="h-full flex flex-col">
+      <div className="flex-1 overflow-y-auto pr-2 space-y-1 min-h-0">
         {chat.length === 0 && (
           <div className="text-neutral-400 text-center mt-4 text-sm">
             Hier erscheinen die Antworten der anderen Spieler...

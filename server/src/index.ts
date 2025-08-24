@@ -84,6 +84,15 @@ io.on('connection', (socket: Socket) => {
     if (!room || !name) return cb({ success: false, error: 'Ungültige Daten.' });
     currentRoom = room;
     const isNewRoom = !rooms.has(room);
+
+    // Prüfe Spieleranzahl wenn Raum bereits existiert
+    if (!isNewRoom) {
+      const existingRoom = rooms.get(room)!;
+      if (existingRoom.players.size >= 5) {
+        return cb({ success: false, error: 'Dieser Raum ist bereits voll (maximal 5 Spieler).' });
+      }
+    }
+
     if (isNewRoom) {
       rooms.set(room, {
         players: new Map(),
@@ -137,6 +146,11 @@ io.on('connection', (socket: Socket) => {
     socket.to(room).emit('update-scores', playerList);
     socket.to(room).emit('host-info', { hostId: roomState.hostId });
 
+    // Benachrichtigung an alle anderen Spieler über neuen Spieler (nur wenn nicht neuer Raum)
+    if (!isNewRoom) {
+      socket.to(room).emit('player-joined', { playerName: name, playerId: socket.id });
+    }
+
     // Wenn ein Spiel läuft, sende dem neuen Spieler die aktuellen Spielinformationen
     if (roomState.gameStarted && !roomState.gameOver) {
       const { word, hints } = words[roomState.wordIndex];
@@ -178,6 +192,12 @@ io.on('connection', (socket: Socket) => {
       return cb({ success: false, error: `Raum "${room}" existiert nicht.` });
     }
 
+    // Prüfe Spieleranzahl
+    const existingRoom = rooms.get(room)!;
+    if (existingRoom.players.size >= 5) {
+      return cb({ success: false, error: 'Dieser Raum ist bereits voll (maximal 5 Spieler).' });
+    }
+
     // Raum existiert - verwende die gleiche Logik wie join-room
     currentRoom = room;
     const avatar = [
@@ -217,6 +237,9 @@ io.on('connection', (socket: Socket) => {
     // Dann an alle anderen im Raum
     socket.to(room).emit('update-scores', playerList);
     socket.to(room).emit('host-info', { hostId: roomState.hostId });
+
+    // Benachrichtigung an alle anderen Spieler über neuen Spieler
+    socket.to(room).emit('player-joined', { playerName: name, playerId: socket.id });
 
     // Wenn ein Spiel läuft, sende dem neuen Spieler die aktuellen Spielinformationen
     if (roomState.gameStarted && !roomState.gameOver) {
@@ -458,11 +481,14 @@ io.on('connection', (socket: Socket) => {
     if (currentRoom && rooms.has(currentRoom)) {
       const state = rooms.get(currentRoom)!;
       const wasHost = state.hostId === socket.id;
+      const leavingPlayer = state.players.get(socket.id);
+      const playerName = leavingPlayer?.name || 'Unbekannter Spieler';
+
       state.players.delete(socket.id);
       state.guessedPlayers.delete(socket.id);
 
       console.log(
-        `Spieler hat Raum ${currentRoom} verlassen. Verbleibende Spieler: ${state.players.size}`,
+        `Spieler ${playerName} hat Raum ${currentRoom} verlassen. Verbleibende Spieler: ${state.players.size}`,
         wasHost ? '(War Host)' : '',
       );
 
@@ -472,6 +498,9 @@ io.on('connection', (socket: Socket) => {
         if (state.roundSummaryTimeout) clearTimeout(state.roundSummaryTimeout);
         rooms.delete(currentRoom);
       } else {
+        // Benachrichtigung an alle verbleibenden Spieler über verlassenen Spieler
+        io.to(currentRoom).emit('player-left', { playerName, playerId: socket.id });
+
         // Wenn der Host geht, mache den ersten verbleibenden Spieler zum neuen Host
         if (wasHost) {
           const newHostId = Array.from(state.players.keys())[0];

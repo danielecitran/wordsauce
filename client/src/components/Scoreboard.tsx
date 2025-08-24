@@ -25,12 +25,13 @@ const Scoreboard: React.FC = () => {
   }, [setPlayers]);
 
   return (
-    <div className="flex flex-col gap-1">
-      {players.length === 0 && <div className="text-neutral-400 text-sm p-2">Noch keine Spieler.</div>}
-      <ul className="flex flex-col gap-1">
-        {players
-          .sort((a, b) => b.score - a.score)
-          .map((p, i) => (
+    <div className="h-full flex flex-col">
+      <div className="flex-1 overflow-y-auto">
+        {players.length === 0 && <div className="text-neutral-400 text-sm p-2">Noch keine Spieler.</div>}
+        <ul className="flex flex-col gap-1">
+          {players
+            .sort((a, b) => b.score - a.score)
+            .map((p, i) => (
             <li 
               key={p.id} 
               className={`flex items-center gap-2 p-2 rounded-lg transition-all duration-300 ${
@@ -59,8 +60,9 @@ const Scoreboard: React.FC = () => {
                 {p.score}
               </span>
             </li>
-          ))}
-      </ul>
+            ))}
+        </ul>
+      </div>
     </div>
   );
 };
