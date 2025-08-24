@@ -1,4 +1,4 @@
-# wordsauce - Wörtererraten-Spiel
+# wordsauce - Das Wörtererraten-Spiel
 
 ## Link
 
